@@ -2,12 +2,11 @@ require "timeout"
 
 module Throttle
   class Instance
-    def initialize(key, max_per_second, opts = {})
-      @key = "throttle:" << key
-      @max_per_second = max_per_second
-      @polling = opts[:polling] || Throttle.default_polling
-      @timeout = opts[:timeout] || Throttle.default_timeout
-      @redis   = opts[:redis]   || Throttle.default_redis_client
+    def initialize(key, polling, timeout, &strategy)
+      @key = key
+      @polling = polling
+      @timeout = timeout
+      @strategy = strategy
     end
 
     def limit(&block)
@@ -17,12 +16,14 @@ module Throttle
           sleep @polling
         end
       end
+
+    rescue Timeout::Error
+      raise Throttle::ThrottledError, "can't execute \"#{@key}\" at this time"
     end
 
     private
     def green?
-      t, c, go = RedisScript.run(@redis, @key, @max_per_second)
-      go
+      @strategy.call(@key)
     end
   end
 end
