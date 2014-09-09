@@ -2,28 +2,22 @@ require "timeout"
 
 module Throttle
   class Instance
-    def initialize(key, polling, timeout, &strategy)
-      @key = key
+    def initialize(strategy, polling, timeout)
+      @strategy = strategy
       @polling = polling
       @timeout = timeout
-      @strategy = strategy
     end
 
     def limit(&block)
       timeout(@timeout) do
         loop do
-          return yield if green?
+          return yield if @strategy.acquire
           sleep @polling
         end
       end
 
     rescue Timeout::Error
-      raise Throttle::ThrottledError, "can't execute \"#{@key}\" at this time"
-    end
-
-    private
-    def green?
-      @strategy.call(@key)
+      raise Throttle::ThrottledError, "can't execute at this time"
     end
   end
 end
