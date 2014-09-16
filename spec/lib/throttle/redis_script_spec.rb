@@ -40,7 +40,7 @@ describe Throttle::RedisScript do
       redis.set(described_class.key(key, :time),  time.to_i)
       redis.set(described_class.key(key, :count), "12")
       redis.set(described_class.key(key, :size),  "24")
-      expect(subject.info).to eq [time, 12, 24]
+      expect(subject.status).to eq [time, 12, 24]
     end
   end
 end

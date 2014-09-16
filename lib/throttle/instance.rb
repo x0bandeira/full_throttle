@@ -11,7 +11,11 @@ module Throttle
     def limit(&block)
       timeout(@timeout) do
         loop do
-          return yield if @strategy.acquire
+          go, count, time = @strategy.acquire
+          if go
+            return yield(count, time) if block.arity > 0
+            return yield
+          end
           sleep @polling
         end
       end

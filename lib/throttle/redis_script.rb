@@ -28,7 +28,7 @@ module Throttle
       end
     end
 
-    def info
+    def status
       time, count, size = @redis.mget(key(:time), key(:count), key(:size))
       [Time.at(time.to_i), count.to_i, size.to_i]
     end
