@@ -34,28 +34,48 @@ describe Throttle::RedisScript do
     end
 
     describe "acquiring permission" do
-      before(:each) { subject.set_bucket_size! }
+      before(:each) { Timecop.freeze(time) }
+      after(:each)  { Timecop.return }
 
-      it "acquires entry on bucket if possible and returns time, count and flag" do
-        Timecop.freeze(time) do |t|
-          expect(subject.acquire).to eq [true,  1, t.to_i]
-          expect(subject.acquire).to eq [true,  2, t.to_i]
-          expect(subject.acquire).to eq [true,  3, t.to_i]
-          expect(subject.acquire).to eq [false, 3, t.to_i]
-          expect(subject.acquire).to eq [false, 3, t.to_i]
+      it "returns time, count and flag" do
+        expect(subject.acquire).to eq [true,  1, time.to_i]
+      end
+
+      context do
+        before(:each) { subject.set_bucket_size! }
+        it "acquires entry on bucket isn't full" do
+          expect(subject.acquire).to eq [true,  1, time.to_i]
+          expect(subject.acquire).to eq [true,  2, time.to_i]
+          expect(subject.acquire).to eq [true,  3, time.to_i]
+          expect(subject.acquire).to eq [false, 3, time.to_i]
+          expect(subject.acquire).to eq [false, 3, time.to_i]
+        end
+
+        it "empties bucket after bucket duration" do
+          expect(subject.acquire).to eq [true,  1, time.to_i]
+          expect(subject.acquire).to eq [true,  2, time.to_i]
+          expect(subject.acquire).to eq [true,  3, time.to_i]
+          expect(subject.acquire).to eq [false, 3, time.to_i]
+
+          Timecop.freeze(time + 1)
+          expect(subject.acquire).to eq [true,  1, (time + 1).to_i]
+        end
+
+        it "changes bucket size at runtime" do
+          expect(subject.acquire).to eq [true,  1, time.to_i]
+          expect(subject.acquire).to eq [true,  2, time.to_i]
+          expect(subject.acquire).to eq [true,  3, time.to_i]
+          expect(subject.acquire).to eq [false, 3, time.to_i]
+
+          subject.set_bucket_size!(4)
+          expect(subject.acquire).to eq [true,  4, time.to_i]
         end
       end
 
-      it "changes bucket size at runtime" do
-        Timecop.freeze(time) do |t|
-          expect(subject.acquire).to eq [true,  1, t.to_i]
-          expect(subject.acquire).to eq [true,  2, t.to_i]
-          expect(subject.acquire).to eq [true,  3, t.to_i]
-          expect(subject.acquire).to eq [false, 3, t.to_i]
+      it "acquires always if no size set" do
+        credibility = ENV["CREDIBLE"] ? Float::INFINITY : 20
 
-          subject.set_bucket_size!(4)
-          expect(subject.acquire).to eq [true,  4, t.to_i]
-        end
+        (0..credibility).each {|n| expect(subject.acquire).to eq [true,  n + 1, time.to_i] }
       end
     end
   end
