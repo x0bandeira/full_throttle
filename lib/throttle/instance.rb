@@ -23,5 +23,9 @@ module Throttle
     rescue Timeout::Error
       raise Throttle::ThrottledError, "can't execute at this time"
     end
+
+    def status
+      @strategy.status
+    end
   end
 end

@@ -54,4 +54,9 @@ describe Throttle::Instance do
       subject.limit { counter.count }
     end
   end
+
+  it "returns status" do
+    expect(strategy).to receive(:status).and_return(:arbitrary_status)
+    expect(subject.status).to eq :arbitrary_status
+  end
 end
