@@ -37,6 +37,10 @@ end
 don't hardcode limits and scale at will running on the console or on a cronjob to raise the limits at night and take it easy during the day
 
 ```ruby
+# no hardcoded limits
+Throttle.new(:upstream_sync) { throw_pokeball!(x, y) }
+
+# manage on the console or a rake task with
 Throttle.for(:upstream_sync).
   set_bucket_size!(hour < 7 || hour > 22 ? 6_000 : 1_000)
 end
