@@ -7,15 +7,10 @@ describe Throttle::RedisScript do
   describe "instance" do
     let(:key) { "test" }
     let(:size) { 3 }
-    subject! { described_class.new(redis, key, size) }
+    subject! { described_class.new(redis, key) }
 
     describe "managing bucket size" do
       let(:bucket_size) { redis.get(described_class.key(key, :size)).to_i }
-
-      it "sets to default if no value given" do
-        subject.set_bucket_size!
-        expect(bucket_size).to eq size
-      end
 
       it "sets to given value" do
         subject.set_bucket_size!(100)
@@ -42,7 +37,7 @@ describe Throttle::RedisScript do
       end
 
       context do
-        before(:each) { subject.set_bucket_size! }
+        before(:each) { subject.set_bucket_size!(3) }
         it "acquires entry on bucket isn't full" do
           expect(subject.acquire).to eq [true,  1, time.to_i]
           expect(subject.acquire).to eq [true,  2, time.to_i]

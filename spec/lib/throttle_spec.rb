@@ -10,24 +10,33 @@ describe Throttle do
   let(:counter) { double(:counter, count: nil) }
   let(:opts)    { {} }
 
+  let!(:redis_script) { described_class::RedisScript.new(redis, :foo) }
+  let!(:instance)     { described_class::Instance.new(redis_script, polling, timeout) }
+
   shared_examples "Throttle API" do
     before(:each) do
       expect(described_class::RedisScript).to receive(:new).
-        with(redis, "#{ns}:#{key}", max).
-        and_call_original
+        with(redis, "#{ns}:#{key}").
+        and_return(redis_script)
 
       expect(described_class::Instance).to receive(:new).
         with(kind_of(described_class::RedisScript), polling, timeout).
-        and_call_original
+        and_return(instance)
     end
 
     it "initializes throttle with options" do
-      expect(described_class.for(key, max, opts)).to be_a(described_class::Instance)
+      expect(described_class.for(key, max, opts)).to eq instance
     end
 
     it "initializes and returns limit" do
-      expect(counter).to receive(:count)
-      described_class.for(key, max, opts) { counter.count }
+      block = ->{}
+      expect(instance).to receive(:limit).and_yield.and_return(:return)
+      expect(described_class.for(key, max, opts, &block)).to eq :return
+    end
+
+    it "doesn't set bucket size if none is passed" do
+      expect(redis_script).to_not receive(:set_bucket_size!)
+      described_class.for(key, nil, opts)
     end
   end
 

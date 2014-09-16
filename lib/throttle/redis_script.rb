@@ -3,16 +3,15 @@ require "digest"
 module Throttle
   class RedisScript
     SCRIPT      = File.read("lib/throttle.lua").freeze
-    SCRIPT_SHA1 = Digest::SHA1.hexdigest(SCRIPT)
+    SCRIPT_SHA1 = Digest::SHA1.hexdigest(SCRIPT).freeze
 
     def self.key(key, type)
       "#{@key}:#{type}"
     end
 
-    def initialize(redis, key, default_bucket_size)
+    def initialize(redis, key)
       @redis = redis
       @key   = key
-      @default_bucket_size = default_bucket_size
     end
 
     def acquire
@@ -33,8 +32,8 @@ module Throttle
       [Time.at(time.to_i), count.to_i, size.to_i]
     end
 
-    def set_bucket_size!(val = nil)
-      @redis.set(key(:size), val || @default_bucket_size)
+    def set_bucket_size!(val)
+      @redis.set(key(:size), val)
     end
 
     private

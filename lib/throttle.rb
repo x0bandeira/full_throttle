@@ -18,8 +18,8 @@ module Throttle
       redis     = opts[:redis]   || Throttle.default_redis_client
       namespace = opts[:ns]      || Throttle.default_ns
 
-      strategy = RedisScript.new(redis, "#{namespace}:#{key}", max_per_second)
-      strategy.set_bucket_size!
+      strategy = RedisScript.new(redis, "#{namespace}:#{key}")
+      strategy.set_bucket_size!(max_per_second) if max_per_second
 
       instance = Instance.new(strategy, polling, timeout)
       block_given? ? instance.limit(&block) : instance
