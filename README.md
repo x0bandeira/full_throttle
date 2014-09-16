@@ -32,14 +32,17 @@ rescue Throttle::ThrottledError => e
 end
 ```
 
-__manage throughput without code pushes__ running on the console or on a cronjob to raise the limits at night and take it easy during the day
+### Manage throughput without code pushes
+
+don't hardcode limits and scale at will running on the console or on a cronjob to raise the limits at night and take it easy during the day
 
 ```ruby
-if (22...7).include?(Time.now.hour)
-  Throttle.for(:upstream_sync).set_bucket_size!(500)
+Throttle.for(:upstream_sync).
+  set_bucket_size!(hour < 7 || hour > 22 ? 6_000 : 1_000)
 end
 ```
 
+All state is kept on Redis. Threadsafety as offered by Redis' `script`.
 
 ## Installation
 
