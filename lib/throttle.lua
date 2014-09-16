@@ -1,13 +1,15 @@
-local current = tonumber(ARGV[1])
-local max = tonumber(ARGV[2])
-local t = tonumber(redis.call("get", KEYS[1] .. ":t")) or current
-local c = tonumber(redis.call("get", KEYS[1] .. ":c")) or 0
-if current - t >= 1 then
-  redis.call("mset", KEYS[1] .. ":t", current, KEYS[1] .. ":c", 1)
-  return {current, 1, 1}
-elseif c >= max then
-  return {t, c, 0}
-else
-  redis.call("mset", KEYS[1] .. ":t", current, KEYS[1] .. ":c", c + 1)
-  return {t, c + 1, 1}
+local time            = tonumber(ARGV[1])
+local bucket_size     = tonumber(redis.call("get", KEYS[1])) or math.huge
+local bucket_time     = tonumber(redis.call("get", KEYS[2])) or time
+local bucket_count    = tonumber(redis.call("get", KEYS[3])) or 0
+local bucket_duration = tonumber(redis.call("get", KEYS[4])) or 1
+
+if time - bucket_time >= bucket_duration then -- reset bucket
+  redis.call("mset", KEYS[2], time, KEYS[3], 1)
+  return {1, 1, time}
+elseif bucket_count >= bucket_size then      -- throttled
+  return {0, bucket_count, bucket_time}
+else                                         -- good to go
+  redis.call("mset", KEYS[2], time, KEYS[3], bucket_count + 1)
+  return {1, bucket_count + 1, bucket_time}
 end

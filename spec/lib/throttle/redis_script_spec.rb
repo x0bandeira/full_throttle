@@ -8,32 +8,39 @@ describe Throttle::RedisScript do
     Throttle::RedisScript.run(*args)
   end
 
-  it "setup needed keys" do
-    expect(redis.get("test:t")).to eq nil
-    expect(redis.get("test:c")).to eq nil
-    at(time) do |t|
-      run_script(redis, "test", 1)
-      expect(redis.get("test:t")).to eq t.to_s
-      expect(redis.get("test:c")).to eq "1"
-    end
-  end
+  describe "instance" do
+    let(:key) { "test" }
+    let(:size) { 3 }
+    subject! { described_class.new(redis, key, size) }
 
-  it "returns time of throttle window, count of items inside the window,
-      flag for inclusion on the window" do
-    at(time) do |t|
-      expect(run_script(redis, "test", 3)).to eq [t, 1, true]
-      expect(run_script(redis, "test", 3)).to eq [t, 2, true]
-      expect(run_script(redis, "test", 3)).to eq [t, 3, true]
-      expect(run_script(redis, "test", 3)).to eq [t, 3, false]
-      expect(run_script(redis, "test", 3)).to eq [t, 3, false]
+    it "acquires entry on bucket if possible and returns time, count and flag" do
+      Timecop.freeze(time) do |t|
+        expect(subject.acquire).to eq [true,  1, t.to_i]
+        expect(subject.acquire).to eq [true,  2, t.to_i]
+        expect(subject.acquire).to eq [true,  3, t.to_i]
+        expect(subject.acquire).to eq [false, 3, t.to_i]
+        expect(subject.acquire).to eq [false, 3, t.to_i]
+      end
     end
 
-    at(time + 1) do |t|
-      expect(run_script(redis, "test", 3)).to eq [t, 1, true]
-      expect(run_script(redis, "test", 3)).to eq [t, 2, true]
-      expect(run_script(redis, "test", 3)).to eq [t, 3, true]
-      expect(run_script(redis, "test", 3)).to eq [t, 3, false]
-      expect(run_script(redis, "test", 4)).to eq [t, 4, true]
+    it "changes bucket size at runtime" do
+      Timecop.freeze(time) do |t|
+        expect(subject.acquire).to eq [true,  1, t.to_i]
+        expect(subject.acquire).to eq [true,  2, t.to_i]
+        expect(subject.acquire).to eq [true,  3, t.to_i]
+        expect(subject.acquire).to eq [false, 3, t.to_i]
+
+        subject.set_bucket_size!(4)
+        expect(subject.acquire).to eq [true,  4, t.to_i]
+      end
+    end
+
+    it "returns info on window time, window runs, bucket size" do
+      expect(Time).to receive(:at).with(time.to_i).and_return(time)
+      redis.set(described_class.key(key, :time),  time.to_i)
+      redis.set(described_class.key(key, :count), "12")
+      redis.set(described_class.key(key, :size),  "24")
+      expect(subject.info).to eq [time, 12, 24]
     end
   end
 end
