@@ -12,7 +12,7 @@ module Throttle
                   :default_ns,
                   :default_polling
 
-    def for(key, max_per_second, opts = {}, &block)
+    def for(key, max_per_second = nil, opts = {}, &block)
       polling   = opts[:polling] || Throttle.default_polling
       timeout   = opts[:timeout] || Throttle.default_timeout
       redis     = opts[:redis]   || Throttle.default_redis_client
@@ -22,7 +22,7 @@ module Throttle
       strategy.set_bucket_size!
 
       instance = Instance.new(strategy, polling, timeout)
-      return instance.limit(&block) if block_given?
+      block_given? ? instance.limit(&block) : instance
     end
   end
 end
