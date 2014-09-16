@@ -7,9 +7,7 @@ describe Throttle::Instance do
   let(:timeout)  { 1 }
   let(:key)      { "test" }
 
-  subject do
-    described_class.new(strategy, polling, timeout)
-  end
+  subject { described_class.new(strategy, polling, timeout) }
 
   it "executes block if throttle strategy returns true" do
     expect(strategy).to receive(:acquire).

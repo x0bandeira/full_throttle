@@ -12,7 +12,7 @@ module Throttle
     def initialize(redis, key, default_bucket_size)
       @redis = redis
       @key   = key
-      set_bucket_size!(default_bucket_size)
+      @default_bucket_size = default_bucket_size
     end
 
     def acquire
@@ -33,8 +33,8 @@ module Throttle
       [Time.at(time.to_i), count.to_i, size.to_i]
     end
 
-    def set_bucket_size!(val)
-      @redis.set(key(:size), val)
+    def set_bucket_size!(val = nil)
+      @redis.set(key(:size), val || @default_bucket_size)
     end
 
     private
