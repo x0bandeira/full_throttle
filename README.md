@@ -1,6 +1,6 @@
 # Full Throttle
 
-![](http://www.necessarygames.com/sites/default/files/game_teaser_images/full_throttle_teaser.png)
+![Full Throttle](http://www.necessarygames.com/sites/default/files/game_teaser_images/full_throttle_teaser.png)
 
 Pull the breaks on your background processing, protect api calls from abuse, and manage throughput with 0 hassle leveraging Redis to throttle concurrent processes.
 
@@ -34,7 +34,7 @@ end
 
 ### Manage throughput without code pushes
 
-don't hardcode limits and scale at will running on the console or on a cronjob to raise the limits at night and take it easy during the day
+don't hardcode limits and scale at will running on the console or on a cronjob to do more work at night and take it easy during the day
 
 ```ruby
 # no hardcoded limits
