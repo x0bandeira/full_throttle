@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["rafaelbandeira3@gmail.com"]
   spec.summary       = %q{Throttle mechanism for distributed work}
   spec.description   = %q{Redis based throttle mechanism to be used by concurrent background jobs}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/rafaelbandeira3/full_throttle"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
