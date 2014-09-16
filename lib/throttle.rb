@@ -22,7 +22,7 @@ module Throttle
       strategy.set_bucket_size!
 
       instance = Instance.new(strategy, polling, timeout)
-      instance.limit(&block)
+      return instance.limit(&block) if block_given?
     end
   end
 end

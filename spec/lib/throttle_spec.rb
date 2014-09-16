@@ -23,6 +23,7 @@ describe Throttle do
       expect(counter).to receive(:count)
 
       described_class.for(key, max, opts) { counter.count }
+      expect(described_class.for(key, max, opts)).to be kind_of(described_class::Instance)
     end
   end
 
