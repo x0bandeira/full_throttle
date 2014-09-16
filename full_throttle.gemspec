@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'throttle/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "throttle"
+  spec.name          = "full_throttle"
   spec.version       = Throttle::VERSION
   spec.authors       = ["Rafael Bandeira"]
   spec.email         = ["rafaelbandeira3@gmail.com"]
