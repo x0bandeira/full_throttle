@@ -28,12 +28,13 @@ describe Throttle::Instance do
   end
 
   describe "retrying" do
-    let(:timeout) { 0.60 }
-    let(:polling) { timeout / 4 }
+    let(:timeout)    { 0.60 }
+    let(:expected_repetition) { 4 }
+    let(:polling)    { timeout / repetition }
 
     it "retries once every `polling` seconds up to `timeout` seconds" do
       expect(strategy).to receive(:acquire).
-        exactly(4).times.and_return(false, false, false, true)
+        exactly(expected_repetition).times.and_return(false, false, false, true)
 
       subject.limit { counter.count }
     end
